@@ -1,21 +1,45 @@
-ble_client:
-  - mac_address: ${mac_address}
-    id: bed_1
-    on_connect:
-      then:
-        # Update the Linak Bed Connection Status
-        - lambda: |-
-            id(ble_client_connected) = true;
-            ESP_LOGD("ble_client_lambda", "${friendly_name}");
-        - delay: 5s
-       # Update Linak Bed height sensors after bluetooth is connected
-        - lambda: |-
-            id(my_bed_head_height).update();
-            id(my_bed_feet_height).update();     
-            id(feet_percent).update();  
-            id(head_percent).update();                           
-    on_disconnect:
-      then:
-        - lambda: |-
-            id(ble_client_connected) = false;
-            ESP_LOGD("ble_client_lambda", "${friendly_name}"); 
+esp32_ble_tracker:
+  scan_parameters:
+    duration: 30s
+#FOR DEBUG ONLY:
+#  on_ble_advertise:
+#    - mac_address: xx:xx:xx:xx:xx:xx
+#      then:
+#        - lambda: |-
+#            ESP_LOGD("ble_adv", "New BLE device");
+#            ESP_LOGD("ble_adv", "  address: %s", x.address_str().c_str());
+#            ESP_LOGD("ble_adv", "  name: %s", x.get_name().c_str());
+#            ESP_LOGD("ble_adv", "  Advertised service UUIDs:");
+#            for (auto uuid : x.get_service_uuids()) {
+#                ESP_LOGD("ble_adv", "    - %s", uuid.to_string().c_str());
+#            }
+#            ESP_LOGD("ble_adv", "  Advertised service data:");
+#            for (auto data : x.get_service_datas()) {
+#                ESP_LOGD("ble_adv", "    - %s: (length %i)", data.uuid.to_string().c_str(), data.data.size());
+#            }
+#            ESP_LOGD("ble_adv", "  Advertised manufacturer data:");
+#            for (auto data : x.get_manufacturer_datas()) {
+#                ESP_LOGD("ble_adv", "    - %s: (length %i)", data.uuid.to_string().c_str(), data.data.size());
+#            }
+#  on_ble_manufacturer_data_advertise:
+#    - mac_address: xx:xx:xx:xx:xx:xx
+#      manufacturer_id: 0590
+#      then:
+#        - lambda: |-
+#            if (x[0] != 0x7b || x[1] != 0x61) return;
+#            int value = x[2] + (x[3] << 8);
+#            id(ble_sensor).publish_state(value);
+#  on_ble_service_data_advertise:
+#    - mac_address: xx:xx:xx:xx:xx:xx
+#      service_uuid: 181A
+#      then:
+#        - lambda: 'id(ble_sensor).publish_state(x[0]);'
+#  on_scan_end:
+#    - then:
+#        - lambda: |-
+#             ESP_LOGD("ble_auto", "The scan has ended!");
+#
+#sensor:
+#  - platform: template
+#    name: "BLE Sensor"
+#    id: ble_sensor
